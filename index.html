@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSM Prompt Library</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0f0f;
+    --paper: #f5f2ec;
+    --cream: #ede9e0;
+    --accent: #c84b2f;
+    --accent-light: #f0d5cf;
+    --muted: #7a7165;
+    --border: #d4cfc4;
+    --card: #ffffff;
+    --tag-bg: #e8e4db;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 48px 60px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.15;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 30%;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.08;
+  }
+
+  .header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.05;
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+    max-width: 600px;
+  }
+
+  header h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .header-sub {
+    margin-top: 16px;
+    font-size: 15px;
+    color: #a09890;
+    font-weight: 300;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* TABS */
+  .tabs-bar {
+    background: var(--cream);
+    border-bottom: 1px solid var(--border);
+    padding: 0 60px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs-bar::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 16px 20px 14px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+    letter-spacing: 0.01em;
+  }
+
+  .tab-btn:hover { color: var(--ink); }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* MAIN CONTENT */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  .prompt-panel { display: none; }
+  .prompt-panel.active { display: block; animation: fadeUp 0.3s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* PROMPT CARD */
+  .prompt-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+
+  .card-header {
+    padding: 28px 32px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .card-header-left {}
+
+  .card-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: var(--tag-bg);
+    color: var(--muted);
+    padding: 3px 8px;
+    border-radius: 2px;
+    margin-bottom: 8px;
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .card-desc {
+    margin-top: 6px;
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.5;
+    max-width: 520px;
+  }
+
+  /* COPY BUTTON */
+  .copy-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 2px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .copy-btn:hover { background: #b03d24; }
+  .copy-btn:active { transform: scale(0.97); }
+
+  .copy-btn.copied {
+    background: #2e7d52;
+  }
+
+  .copy-btn svg { flex-shrink: 0; }
+
+  /* PROMPT BODY */
+  .prompt-body {
+    padding: 0;
+  }
+
+  .prompt-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: #2a2520;
+    padding: 28px 32px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #faf9f6;
+    border-top: none;
+    max-height: 480px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .prompt-text::-webkit-scrollbar { width: 4px; }
+  .prompt-text::-webkit-scrollbar-track { background: transparent; }
+  .prompt-text::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Highlight fill-in fields */
+  .prompt-text .fill {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* HOW TO USE */
+  .how-to {
+    margin-top: 28px;
+    padding: 24px 28px;
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .how-to h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .how-to ol {
+    padding-left: 18px;
+    font-size: 14px;
+    color: #4a3830;
+    line-height: 1.8;
+    font-weight: 400;
+  }
+
+  /* STYLE BLOCK NOTE */
+  .style-note {
+    margin-top: 20px;
+    padding: 18px 24px;
+    background: var(--tag-bg);
+    border-radius: 2px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .style-note strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.05em;
+    border-top: 1px solid var(--border);
+    background: var(--cream);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-label">CSM Prompt Library</div>
+  <h1>Your <em>prompts,</em><br>ready to use.</h1>
+  <p class="header-sub">Six reusable templates for enterprise customer success — click any tab, copy, paste.</p>
+</header>
+
+<div class="tabs-bar" id="tabsBar">
+  <button class="tab-btn active" onclick="switchTab(0)">Follow-Up Email</button>
+  <button class="tab-btn" onclick="switchTab(1)">Style Block</button>
+  <button class="tab-btn" onclick="switchTab(2)">QBR Agenda</button>
+  <button class="tab-btn" onclick="switchTab(3)">Handoff Notes</button>
+  <button class="tab-btn" onclick="switchTab(4)">External Research</button>
+  <button class="tab-btn" onclick="switchTab(5)">O2 Framework</button>
+  <button class="tab-btn" onclick="switchTab(6)">Share Framework</button>
+</div>
+
+<main>
+
+  <!-- 0: FOLLOW-UP EMAIL -->
+  <div class="prompt-panel active" id="panel-0">
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-tag">Template 1</div>
+          <div class="card-title">Follow-Up Email</div>
+          <div class="card-desc">Turns rough call notes into a polished customer email with summary, action items, and next steps.</div>
+        </div>
+        <button class="copy-btn" id="copy-0" onclick="copyPrompt(0)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-text" id="text-0">Role: Act as an experienced Enterprise Customer Success Manager.
+
+Task: Write a professional follow-up email to my customer based on the call notes below.
+
+Include:
+  1. A brief, warm opening that references the meeting
+  2. A 3-bullet summary of key discussion points
+  3. A clear action items list (owner + due date for each)
+  4. A friendly closing with next meeting date if known
+
+Tone: [e.g. warm and direct / formal and concise / collaborative]
+Relationship context: [e.g. new account / long-term partner / at-risk]
+
+Call notes:
+[PASTE YOUR ROUGH NOTES HERE]</div>
+      </div>
+    </div>
+    <div class="how-to">
+      <h3>How to use</h3>
+      <ol>
+        <li>Copy the prompt above</li>
+        <li>Replace the <strong>[bracketed fields]</strong> with your specifics</li>
+        <li>Paste your raw call notes at the bottom</li>
+        <li>Paste the whole thing into Claude and send</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 1: STYLE BLOCK -->
+  <div class="prompt-panel" id="panel-1">
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-tag">Template 2 · Add-on</div>
+          <div class="card-title">Style Block</div>
+          <div class="card-desc">Reusable voice and tone instructions. Append to any other prompt to control how Claude writes for your audience.</div>
+        </div>
+        <button class="copy-btn" id="copy-1" onclick="copyPrompt(1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-text" id="text-1">STYLE BLOCK — append to any prompt to control tone and format
+
+Tone: Write in a [warm / direct / formal / conversational] tone.
+Sentence style: Use [short, punchy sentences / longer narrative prose].
+Avoid jargon. Never use words like [synergy / leverage / circle back].
+
+Audience: My customers are [e.g. mid-market SaaS companies / enterprise finance teams].
+They expect [e.g. concise, data-backed communication].
+
+Format: Use bullet points for action items. Keep emails under [150 / 200] words unless the content requires more.
+
+Voice: Write as though I am the account owner — confident, helpful, and focused on outcomes, not features.</div>
+      </div>
+    </div>
+    <div class="style-note">
+      <strong>Tip:</strong> This block works as a standalone add-on. Copy it and paste it at the bottom of any other prompt (QBR Agenda, Handoff Notes, Sharing the Framework) wherever you see <em>[Add your style block here]</em>.
+    </div>
+  </div>
+
+  <!-- 2: QBR AGENDA -->
+  <div class="prompt-panel" id="panel-2">
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-tag">Template 3</div>
+          <div class="card-title">QBR Agenda</div>
+          <div class="card-desc">Builds a personalized, time-blocked Quarterly Business Review agenda from your account context.</div>
+        </div>
+        <button class="copy-btn" id="copy-2" onclick="copyPrompt(2)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-text" id="text-2">Role: Act as a senior Customer Success Manager preparing for a Quarterly Business Review.
+
+Task: Build a personalized QBR agenda for [Customer Name / Company].
+
+Duration: [60 / 90] minutes
+Attendees: [Customer team] + [CSM team]
+
+Account context:
+  - Primary goals: [e.g. increase adoption, reduce churn in ops team]
+  - Key metrics to review: [e.g. usage at 72%, support tickets down 15%]
+  - Wins since last QBR: [e.g. completed onboarding, launched 2 new use cases]
+  - Open risks or concerns: [e.g. budget review in Q2, champion leaving]
+  - Next quarter priorities: [e.g. expand to EMEA team, hit 85% adoption]
+
+Format: Numbered agenda sections with time allocations.
+
+Include these sections:
+  1. Kickoff
+  2. Partnership Highlights
+  3. Product Usage
+  4. Success Metrics
+  5. Challenges & Opportunities
+  6. Next Quarter Focus
+  7. Wrap-Up & Next Steps
+
+[Add your style block here]</div>
+      </div>
+    </div>
+    <div class="how-to">
+      <h3>How to use</h3>
+      <ol>
+        <li>Copy this prompt and fill in all <strong>[bracketed fields]</strong></li>
+        <li>Optionally replace <em>[Add your style block here]</em> with the Style Block (Template 2)</li>
+        <li>Paste into Claude — you'll get a ready-to-share agenda</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 3: HANDOFF NOTES -->
+  <div class="prompt-panel" id="panel-3">
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-tag">Template 4</div>
+          <div class="card-title">Handoff Notes</div>
+          <div class="card-desc">Converts call notes into structured internal documentation with action table and team-specific callouts.</div>
+        </div>
+        <button class="copy-btn" id="copy-3" onclick="copyPrompt(3)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-text" id="text-3">Role: Act as a Customer Success Manager documenting a customer interaction for internal team alignment.
+
+Task: Draft structured handoff notes from the call details below.
+
+Include these sections:
+  1. Call Summary (3–4 sentences)
+  2. Key Discussion Points (bullet list)
+  3. Action Items Table (Owner | Task | Due Date | Status)
+  4. Notes for Internal Teams (Support, Product, CS Leadership)
+  5. Next Steps
+
+Tone: Internal, direct, factual. No fluff.
+
+Call details:
+[PASTE YOUR CALL NOTES HERE]
+
+[Add your style block here]</div>
+      </div>
+    </div>
+    <div class="how-to">
+      <h3>How to use</h3>
+      <ol>
+        <li>Copy the prompt and paste your raw call notes into the designated field</li>
+        <li>Add the Style Block if you want to control formatting</li>
+        <li>Claude will return CRM-ready structured notes</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 4: EXTERNAL RESEARCH -->
+  <div class="prompt-panel" id="panel-4">
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-tag">Template 5 · Step 1 of 3</div>
+          <div class="card-title">External Research</div>
+          <div class="card-desc">Generates source-backed competitive and industry insights to anchor your value framework. Run this first.</div>
+        </div>
+        <button class="copy-btn" id="copy-4" onclick="copyPrompt(4)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-text" id="text-4">I am a Customer Success Manager at [Your Company].
+My customer is [Company Name / Industry — anonymize if using public AI].
+
+Research the following and return source-backed insights:
+
+  1. What are the top 3–5 business outcomes their customers care most about?
+  2. What are the most common pain points that drive their customers to buy?
+  3. What metrics do companies in this industry use to measure success?
+  4. What competitive pressures or market trends are most relevant?
+
+Format: Bullet points with a brief source reference for each insight.
+Focus on publicly available data. Do not fabricate statistics.</div>
+      </div>
+    </div>
+    <div class="how-to">
+      <h3>How to use</h3>
+      <ol>
+        <li>Fill in your company and your customer's company/industry</li>
+        <li>Run this in Claude — save the output</li>
+        <li>Feed that output into the <strong>O2 Framework prompt</strong> (Template 6) as the next step</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 5: O2 FRAMEWORK -->
+  <div class="prompt-panel" id="panel-5">
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-tag">Template 6 · Step 2 of 3</div>
+          <div class="card-title">O2 Framework Mapping</div>
+          <div class="card-desc">Maps your research into a 6-column Value Realization Framework table using the O2 methodology.</div>
+        </div>
+        <button class="copy-btn" id="copy-5" onclick="copyPrompt(5)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-text" id="text-5">Role: Act as a strategic Customer Success advisor.
+
+Task: Using the research insights below, build a Value Realization Framework using the O2 methodology.
+
+Map each insight to these six columns:
+  1. Value Driver  — the overarching business goal
+  2. Outcome       — the specific change the customer wants to achieve
+  3. Solution      — the feature or capability that addresses it
+  4. Impact        — the broader business effect
+  5. Metric        — how success is measured (use quantified examples)
+  6. Source        — where the insight or data came from
+
+Return the framework as a table with one row per value driver.
+Aim for 4–6 rows. Use concrete, business-language descriptions.
+Do not fabricate metrics — use ranges or "to be measured" if unknown.
+
+Research insights:
+[PASTE YOUR STEP 1 OUTPUT HERE]</div>
+      </div>
+    </div>
+    <div class="how-to">
+      <h3>How to use</h3>
+      <ol>
+        <li>Run Template 5 (External Research) first and save the output</li>
+        <li>Paste that output into the field at the bottom of this prompt</li>
+        <li>Claude returns a formatted table — use it in your QBR or account plan</li>
+        <li>Then use <strong>Template 7</strong> to share the framework with your customer</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 6: SHARE FRAMEWORK -->
+  <div class="prompt-panel" id="panel-6">
+    <div class="prompt-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          <div class="card-tag">Template 7 · Step 3 of 3</div>
+          <div class="card-title">Share the Framework</div>
+          <div class="card-desc">Writes the customer-facing email introducing your Value Realization Framework and proposing a review call.</div>
+        </div>
+        <button class="copy-btn" id="copy-6" onclick="copyPrompt(6)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy Prompt
+        </button>
+      </div>
+      <div class="prompt-body">
+        <div class="prompt-text" id="text-6">Role: Act as an experienced Enterprise Customer Success Manager.
+
+Task: Write a short email to my customer introducing the value framework I have built for their account.
+
+The email should:
+  - Briefly explain what a Value Realization Framework is and why it matters
+  - Invite them to review the attached framework and share their input
+  - Propose a 30-minute call to walk through it together
+  - Set a collaborative, strategic tone — this is a partnership document
+
+Context:
+  - Customer: [Company Name]
+  - Relationship stage: [e.g. 6 months in, renewal in Q3]
+  - Primary contact: [Title, not name]
+
+[Add your style block here]</div>
+      </div>
+    </div>
+    <div class="how-to">
+      <h3>How to use</h3>
+      <ol>
+        <li>Fill in the customer and relationship context</li>
+        <li>Append your Style Block for consistent voice</li>
+        <li>Claude drafts the email — attach your framework and send</li>
+      </ol>
+    </div>
+    <div class="style-note" style="margin-top:20px;">
+      <strong>Full workflow:</strong> External Research (T5) → O2 Framework Mapping (T6) → Share the Framework (T7). These three prompts are designed to chain together.
+    </div>
+  </div>
+
+</main>
+
+<footer>CSM Prompt Library &nbsp;·&nbsp; 7 templates &nbsp;·&nbsp; Built for enterprise customer success</footer>
+
+<script>
+  const prompts = [];
+  for (let i = 0; i <= 6; i++) {
+    const el = document.getElementById('text-' + i);
+    if (el) prompts.push(el.innerText);
+  }
+
+  function switchTab(index) {
+    document.querySelectorAll('.prompt-panel').forEach((p, i) => {
+      p.classList.toggle('active', i === index);
+    });
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === index);
+    });
+  }
+
+  function copyPrompt(index) {
+    const text = prompts[index];
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('copy-' + index);
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.innerHTML = orig;
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
